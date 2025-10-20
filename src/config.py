@@ -1,0 +1,3 @@
+class Config:
+    OPENWEATHERMAP_API_KEY = "a7c0f4d29d386a1d17e14a67d07476bb"
+    NEWS_API_KEY = "b471bbdc22d24c7ba396e44d5ba78f32"
