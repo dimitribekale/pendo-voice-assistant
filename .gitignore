@@ -68,3 +68,11 @@ celerybeat-schedule
 
 # mypy
 .mypy_cache/
+
+pyvenv.cfg
+outputs.md
+suggestions.md
+share/
+test_vosk.py
+Scripts/
+plan.md
