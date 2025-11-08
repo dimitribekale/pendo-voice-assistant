@@ -9,10 +9,10 @@ from transformers import (
     Seq2SeqTrainer,
     #DataCollatorSpeechSeq2SeqWithPadding,
 )
-# The correct import path
 import evaluate
 import re
 from huggingface_hub import login
+from config import Config
 
 
 from typing import Any, Dict, List, Union
@@ -38,12 +38,6 @@ class DataCollatorSpeechSeq2SeqWithPadding:
         return batch
 
 
-# ====================================================================================
-# 1. Configuration & Model Loading
-# ====================================================================================
-
-# --- Configuration ---
-# Set to your Hugging Face username and the desired model name
 HUB_MODEL_ID = "bekalebendong/pendo-whisper-base-finetuned"
 MODEL_CHECKPOINT = "openai/whisper-base"
 DATASET_NAME = "superb"
@@ -51,7 +45,7 @@ CONFIG_NAME = "asr"
 LANGUAGE_ABBR = "english"
 TASK = "transcribe"
 SAMPLING_RATE = 16000
-HF_TOKEN = "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"
+HF_TOKEN = Config.HF_TOKEN_MODEL
 
 # Check for GPU availability
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -70,21 +64,12 @@ tokenizer = WhisperTokenizer.from_pretrained(MODEL_CHECKPOINT, language=LANGUAGE
 processor = WhisperProcessor.from_pretrained(MODEL_CHECKPOINT, language=LANGUAGE_ABBR, task=TASK)
 
 
-# ====================================================================================
-# 2. Load and Preprocess Dataset
-# ====================================================================================
-
-# --- Load the dataset ---
-# Streaming mode is used to avoid downloading the entire dataset at once
 common_voice = DatasetDict()
 common_voice["train"] = load_dataset(DATASET_NAME, CONFIG_NAME, split="train", streaming=True)
 common_voice["test"] = load_dataset(DATASET_NAME, CONFIG_NAME, split="validation", streaming=True)
 
 print(f"Dataset loaded: {common_voice}")
 
-# --- Preprocessing functions ---
-
-# Resample audio to 16kHz as required by Whisper
 common_voice = common_voice.cast_column("audio", Audio(sampling_rate=SAMPLING_RATE))
 
 # Characters to remove from the transcriptions
@@ -92,7 +77,6 @@ chars_to_remove_regex = r'[,\.?!\-;:\"“%‘”\']'
 
 def remove_special_characters(batch):
     """Removes special characters. NOTE: The column is now 'text'."""
-    # SUPERB uses the 'text' column for transcriptions, not 'sentence'
     batch["text"] = re.sub(chars_to_remove_regex, '', batch["text"]).lower()
     return batch
 
@@ -100,7 +84,6 @@ def prepare_dataset(batch):
     """
     Prepares a batch of audio data for the model.
     """
-    # Load and resample audio
     audio = batch["audio"]
 
     # Compute log-Mel input features from the audio array
@@ -112,20 +95,12 @@ def prepare_dataset(batch):
 
 print("Applying preprocessing to the dataset...")
 common_voice = common_voice.map(remove_special_characters)
-# Get the column names from the first example to correctly remove them after processing
-# Note: SUPERB/ASR doesn't have a huge number of columns to remove like Common Voice
 column_names = list(next(iter(common_voice.values())).features)
 common_voice = common_voice.map(prepare_dataset, remove_columns=column_names)
 
-# ====================================================================================
-# 3. Training Setup
-# ====================================================================================
-
-# --- Data Collator ---
-# This class handles dynamic padding of inputs and labels for batches
 data_collator = DataCollatorSpeechSeq2SeqWithPadding(processor=processor)
 
-# --- Evaluation Metric ---
+
 metric = evaluate.load("wer")
 
 def compute_metrics(pred):
@@ -151,19 +126,16 @@ model.config.forced_decoder_ids = None
 model.config.suppress_tokens = []
 
 
-# --- Training Arguments ---
-# These arguments are tailored for a powerful GPU like an H100.
-# Adjust `per_device_train_batch_size` based on your VRAM.
 training_args = Seq2SeqTrainingArguments(
-    output_dir="./whisper-base-finetuned-cv-en",  # Local directory for checkpoints
-    per_device_train_batch_size=64, # Increased for H100
-    gradient_accumulation_steps=1,  # Use 2 or 4 if you need to simulate a larger batch size
+    output_dir="./whisper-base-finetuned-cv-en",
+    per_device_train_batch_size=64,
+    gradient_accumulation_steps=1, 
     learning_rate=15e-5,
     save_strategy="no",
     warmup_steps=500,
-    max_steps=5000, # Set a fixed number of training steps
-    gradient_checkpointing=True, # Saves VRAM at a small cost of speed
-    bf16=True, # Essential for H100 performance
+    max_steps=5000, 
+    gradient_checkpointing=True, 
+    bf16=True,
     eval_strategy="steps",
     per_device_eval_batch_size=32,
     predict_with_generate=True,
@@ -180,7 +152,6 @@ training_args = Seq2SeqTrainingArguments(
 )
 
 
-# --- Initialize Trainer ---
 trainer = Seq2SeqTrainer(
     args=training_args,
     model=model,

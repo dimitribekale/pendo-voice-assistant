@@ -19,7 +19,7 @@ class NewsTool(BaseTool):
         }
 
         try:
-            response = requests.get(self.base_url, params=params)
+            response = requests.get(self.base_url, params=params, timeout=10)
             response.raise_for_status()  # Raise an exception for bad status codes
             news_data = response.json()
 

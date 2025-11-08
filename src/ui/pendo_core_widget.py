@@ -1,16 +1,20 @@
 import sys
+from pathlib import Path
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtGui import QPainter, QPixmap, QColor, QBrush, QRadialGradient, QPainterPath
 from PyQt5.QtCore import Qt, QTimer, QPropertyAnimation, pyqtProperty, QEasingCurve
+
+current_file = Path(__file__).resolve()
+project_root = current_file.parent.parent.parent
+icon_path = project_root / 'assets' / 'images' / 'pendo-icone.png'
 
 class PendoCoreWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumSize(200, 200)
 
-        self.pendo_icon = QPixmap("C:\\Users\\dimbe\\OneDrive\\Desktop\\AI4SE\\GitHub-Projects\\voice-assitant\\pendo\\assets\\images\\pendo-icone.png")
-        # Scale the icon to fit within the core radius, maintaining aspect ratio
-        self.icon_size = 80 # Desired size for the icon within the core
+        self.pendo_icon = QPixmap(str(icon_path))
+        self.icon_size = 80
         self.pendo_icon = self.pendo_icon.scaled(self.icon_size, self.icon_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
 
         self._radius = 50 # Base radius for the core

@@ -1,14 +1,20 @@
 import spacy
 from spacy.matcher import Matcher
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class NLU:
     def __init__(self):
         try:
             self.nlp = spacy.load("en_core_web_sm")
+            logger.info("SpaCy model loaded successfully")
         except OSError:
-            print("Downloading the spaCy model...")
+            logger.info("SpaCy model not found. Downloading en_core_web_sm...")
             spacy.cli.download("en_core_web_sm")
             self.nlp = spacy.load("en_core_web_sm")
+            logger.info("SpaCy model downloaded and loaded successfully")
 
         self.matcher = Matcher(self.nlp.vocab)
 
