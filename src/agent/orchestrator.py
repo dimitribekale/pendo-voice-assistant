@@ -1,16 +1,26 @@
+from typing import Optional
 from .nlu import NLU
 from .tool_manager import ToolManager
 from .query_reformer import QueryReformulationTool
+from .intents import Intent
 import logging
 
-# Configure logging
+
 logger = logging.getLogger(__name__)
 
 class Orchestrator:
-    def __init__(self):
-        self.nlu = NLU()
-        self.tool_manager = ToolManager()
-        self.query_reformer = QueryReformulationTool()
+    """Orchestrates voice command processing."""
+
+    def __init__(self,
+                 nlu: Optional[NLU] = None,
+                 tool_manager: Optional[ToolManager] = None,
+                 query_reformer: Optional[QueryReformulationTool] = None):
+        
+        self.nlu = nlu or NLU()
+        self.tool_manager = tool_manager or ToolManager()
+        self.query_reformer = query_reformer or QueryReformulationTool()
+
+        logger.info("Orchestrator initialized with dependency injection")
 
     def process_command(self, text):
         """
