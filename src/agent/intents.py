@@ -1,4 +1,7 @@
+import logging
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 class Intent(str, Enum):
 
@@ -13,10 +16,20 @@ class Intent(str, Enum):
     @classmethod
     def from_string(cls, intent_str: str) -> 'Intent':
         """Convert string into Intent enum."""
+        # Defensive check for None or empty
+        if intent_str is None:
+            logger.error("Intent.from_string() received None. This indicates a bug in the calling code.")
+            return cls.UNKNOWN
+        
+        if not isinstance(intent_str, str):
+            logger.error(f"Intent.from_string() received non-string type: {type(intent_str)}")
+            return cls.UNKNOWN
+        
         try:
             return cls(intent_str)
         except ValueError:
-            cls.UNKNOWN
+            logger.warning(f"Unknown intent received: '{intent_str}'. Returning UNKNOWN.")
+            return cls.UNKNOWN
 
 class IntentNames:
     """String constants for intent names"""

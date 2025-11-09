@@ -1,11 +1,19 @@
 import spacy
 from spacy.matcher import Matcher
+from spacy.tokens import Doc
+from typing import Optional, List, Tuple, Any
 import logging
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 class NLU:
+    """
+    Natural Language Understanding component.
+
+    Uses spaCy for text processing and pattern matching to detect
+    user intents and extract entities from voice commands.
+    """
     def __init__(self):
         try:
             self.nlp = spacy.load("en_core_web_sm")
@@ -26,7 +34,19 @@ class NLU:
         self.matcher.add("GET_TIME", [[{"LOWER": "time"}]])
         self.matcher.add("TELL_JOKE", [[{"LOWER": "joke"}]])
 
-    def process_query(self, text):
+    def process_query(self, text: str) -> Tuple[Optional[str], List[Any], Doc]:
+        """
+        Process user query to detect intent and extract entities.
+
+        Args:
+            text: User's voice command as text
+
+        Returns:
+            Tuple containing:
+                - detected_intent: Intent string or None if not detected
+                - entities: List of spaCy entities found in text
+                - doc: Processed spaCy Doc object
+        """
         doc = self.nlp(text.lower())
         matches = self.matcher(doc)
 

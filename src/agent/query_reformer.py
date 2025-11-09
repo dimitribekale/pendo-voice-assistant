@@ -1,10 +1,26 @@
+from typing import List, Any, Optional
 from .tools.base_tool import BaseTool
 
 class QueryReformulationTool(BaseTool):
-    def __init__(self):
-        super().__init__("Query Reformulation Tool", "Reformulates natural language queries into tool-specific formats.")
+    """
+    Reformulates natural language queries into tool-specific formats.
 
-    def run(self, detected_intent, entities, original_text):
+    Currently uses rule-based extraction. In Phase 2, this will be replaced
+    by a fine-tuned LLM for better query understanding.
+    """
+
+    def __init__(self):
+        super().__init__(
+            "Query Reformulation Tool",
+            "Reformulates natural language queries into tool-specific formats."
+        )
+
+    def run(
+        self,
+        detected_intent: str,
+        entities: List[Any],
+        original_text: str
+    ) -> Optional[str]:
         # For now, this is a placeholder.
         # In Phase 2, this will be replaced by a fine-tuned LLM.
         if detected_intent == "SEARCH_WIKIPEDIA":

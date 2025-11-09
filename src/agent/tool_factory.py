@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, List
 from .tools.base_tool import BaseTool
 from .tools.weather_tool import WeatherTool
 from .tools.news_tool import NewsTool
@@ -75,6 +75,11 @@ class ToolFactory:
         if intent in self._tool_instances:
             del self._tool_instances[intent]
     
-    def get_available_intent(self) -> list[Intent]:
-        """Get list of all available intents."""
+    def get_available_intents(self) -> List[Intent]:
+        """
+        Get list of all available intents.
+
+        Returns:
+            List of Intent enum values for which tools are registered
+        """
         return list(self._tool_classes.keys())

@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from .intents import Intent
-from typing import Optional
+from typing import Optional, Dict, List
 from .tools.base_tool import BaseTool
 from .query_reformer import QueryReformulationTool
 
@@ -35,8 +35,15 @@ class IntentHandler(ABC):
         pass
 
 class WeatherHandler(IntentHandler):
-    
-    def handle(self, tool, entities, text, query_reformer=None) -> str:
+    """Handler for GET_WEATHER intent with optional query reformulation."""
+
+    def handle(
+        self,
+        tool: BaseTool,
+        entities: List[str],
+        text: str,
+        query_reformer: Optional[QueryReformulationTool] = None
+    ) -> str:
         try:
             city = None
             if query_reformer:
@@ -50,7 +57,13 @@ class WeatherHandler(IntentHandler):
 class NewsHandler(IntentHandler):
     """Handler for GET_NEWS intent."""
 
-    def handle(self, tool, entities, text, query_reformer=None) -> str:
+    def handle(
+        self,
+        tool: BaseTool,
+        entities: List[str],
+        text: str,
+        query_reformer: Optional[QueryReformulationTool] = None
+    ) -> str:
         try:
             logger.info("Getting news headlines")
             return tool.run()
@@ -59,8 +72,15 @@ class NewsHandler(IntentHandler):
             return "I couldn't fetch the news right now."
 
 class WikipediaHandler(IntentHandler):
+    """Handler for SEARCH_WIKIPEDIA intent with query reformulation."""
 
-    def handle(self, tool, entities, text, query_reformer=None) -> str:
+    def handle(
+        self,
+        tool: BaseTool,
+        entities: List[str],
+        text: str,
+        query_reformer: Optional[QueryReformulationTool] = None
+    ) -> str:
         try:
             query = None
             if query_reformer:
@@ -81,7 +101,13 @@ class SimpleHandler(IntentHandler):
         self.intent_name = intent_name
         self.error_message = error_message
 
-    def handle(self, tool, entities, text, query_reformer=None) -> str:
+    def handle(
+        self,
+        tool: BaseTool,
+        entities: List[str],
+        text: str,
+        query_reformer: Optional[QueryReformulationTool] = None
+    ) -> str:
         try:
             logger.info(f"Executing: {self.intent_name}")
             return tool.run()
@@ -90,11 +116,11 @@ class SimpleHandler(IntentHandler):
             return self.error_message
         
 class HandlerRegistry:
-    """Registery mapping intents to their handlers."""
+    """Registry mapping intents to their handlers."""
 
-    def __inti__(self):
-
-        self._handlers = {
+    def __init__(self):
+        """Initialize the handler registry with all intent handlers."""
+        self._handlers: Dict[Intent, IntentHandler] = {
             Intent.GET_WEATHER: WeatherHandler(),
             Intent.GET_NEWS: NewsHandler(),
             Intent.SEARCH_WIKIPEDIA: WikipediaHandler(),
@@ -102,5 +128,14 @@ class HandlerRegistry:
             Intent.GET_TIME: SimpleHandler("Get Time", "I couldn't get the current time."),
             Intent.TELL_JOKE: SimpleHandler("Tell Joke", "I forgot the punchline!"),
         }
-    def get_handler(self, intent) -> Optional[IntentHandler]:
+    def get_handler(self, intent: Intent) -> Optional[IntentHandler]:
+        """
+        Get the handler for a specific intent.
+
+        Args:
+            intent: The Intent enum value
+
+        Returns:
+            The handler instance, or None if not found
+        """
         return self._handlers.get(intent)
